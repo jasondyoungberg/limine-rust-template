@@ -1,27 +1,29 @@
 # Nuke built-in rules and variables.
 override MAKEFLAGS += -rR
 
+override IMAGE_NAME := barebones
+
 .PHONY: all
-all: barebones.iso
+all: $(IMAGE_NAME).iso
 
 .PHONY: all-hdd
-all-hdd: barebones.hdd
+all-hdd: $(IMAGE_NAME).hdd
 
 .PHONY: run
-run: barebones.iso
-	qemu-system-x86_64 -M q35 -m 2G -cdrom barebones.iso -boot d
+run: $(IMAGE_NAME).iso
+	qemu-system-x86_64 -M q35 -m 2G -cdrom $(IMAGE_NAME).iso -boot d
 
 .PHONY: run-uefi
-run-uefi: ovmf-x64 barebones.iso
-	qemu-system-x86_64 -M q35 -m 2G -bios ovmf-x64/OVMF.fd -cdrom barebones.iso -boot d
+run-uefi: ovmf-x64 $(IMAGE_NAME).iso
+	qemu-system-x86_64 -M q35 -m 2G -bios ovmf-x64/OVMF.fd -cdrom $(IMAGE_NAME).iso -boot d
 
 .PHONY: run-hdd
-run-hdd: barebones.hdd
-	qemu-system-x86_64 -M q35 -m 2G -hda barebones.hdd
+run-hdd: $(IMAGE_NAME).hdd
+	qemu-system-x86_64 -M q35 -m 2G -hda $(IMAGE_NAME).hdd
 
 .PHONY: run-hdd-uefi
-run-hdd-uefi: ovmf-x64 barebones.hdd
-	qemu-system-x86_64 -M q35 -m 2G -bios ovmf-x64/OVMF.fd -hda barebones.hdd
+run-hdd-uefi: ovmf-x64 $(IMAGE_NAME).hdd
+	qemu-system-x86_64 -M q35 -m 2G -bios ovmf-x64/OVMF.fd -hda $(IMAGE_NAME).hdd
 
 ovmf-x64:
 	mkdir -p ovmf-x64
@@ -35,7 +37,7 @@ limine:
 kernel:
 	$(MAKE) -C kernel
 
-barebones.iso: limine kernel
+$(IMAGE_NAME).iso: limine kernel
 	rm -rf iso_root
 	mkdir -p iso_root
 	cp kernel/kernel.elf \
@@ -44,18 +46,18 @@ barebones.iso: limine kernel
 		-no-emul-boot -boot-load-size 4 -boot-info-table \
 		--efi-boot limine-cd-efi.bin \
 		-efi-boot-part --efi-boot-image --protective-msdos-label \
-		iso_root -o barebones.iso
-	limine/limine-deploy barebones.iso
+		iso_root -o $(IMAGE_NAME).iso
+	limine/limine-deploy $(IMAGE_NAME).iso
 	rm -rf iso_root
 
-barebones.hdd: limine kernel
-	rm -f barebones.hdd
-	dd if=/dev/zero bs=1M count=0 seek=64 of=barebones.hdd
-	parted -s barebones.hdd mklabel gpt
-	parted -s barebones.hdd mkpart ESP fat32 2048s 100%
-	parted -s barebones.hdd set 1 esp on
-	limine/limine-deploy barebones.hdd
-	sudo losetup -Pf --show barebones.hdd >loopback_dev
+$(IMAGE_NAME).hdd: limine kernel
+	rm -f $(IMAGE_NAME).hdd
+	dd if=/dev/zero bs=1M count=0 seek=64 of=$(IMAGE_NAME).hdd
+	parted -s $(IMAGE_NAME).hdd mklabel gpt
+	parted -s $(IMAGE_NAME).hdd mkpart ESP fat32 2048s 100%
+	parted -s $(IMAGE_NAME).hdd set 1 esp on
+	limine/limine-deploy $(IMAGE_NAME).hdd
+	sudo losetup -Pf --show $(IMAGE_NAME).hdd >loopback_dev
 	sudo mkfs.fat -F 32 `cat loopback_dev`p1
 	mkdir -p img_mount
 	sudo mount `cat loopback_dev`p1 img_mount
@@ -69,7 +71,7 @@ barebones.hdd: limine kernel
 
 .PHONY: clean
 clean:
-	rm -rf iso_root barebones.iso barebones.hdd
+	rm -rf iso_root $(IMAGE_NAME).iso $(IMAGE_NAME).hdd
 	$(MAKE) -C kernel clean
 
 .PHONY: distclean
