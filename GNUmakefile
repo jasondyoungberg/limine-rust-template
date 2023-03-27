@@ -14,20 +14,20 @@ run: $(IMAGE_NAME).iso
 	qemu-system-x86_64 -M q35 -m 2G -cdrom $(IMAGE_NAME).iso -boot d
 
 .PHONY: run-uefi
-run-uefi: ovmf-x64 $(IMAGE_NAME).iso
-	qemu-system-x86_64 -M q35 -m 2G -bios ovmf-x64/OVMF.fd -cdrom $(IMAGE_NAME).iso -boot d
+run-uefi: ovmf $(IMAGE_NAME).iso
+	qemu-system-x86_64 -M q35 -m 2G -bios ovmf/OVMF.fd -cdrom $(IMAGE_NAME).iso -boot d
 
 .PHONY: run-hdd
 run-hdd: $(IMAGE_NAME).hdd
 	qemu-system-x86_64 -M q35 -m 2G -hda $(IMAGE_NAME).hdd
 
 .PHONY: run-hdd-uefi
-run-hdd-uefi: ovmf-x64 $(IMAGE_NAME).hdd
-	qemu-system-x86_64 -M q35 -m 2G -bios ovmf-x64/OVMF.fd -hda $(IMAGE_NAME).hdd
+run-hdd-uefi: ovmf $(IMAGE_NAME).hdd
+	qemu-system-x86_64 -M q35 -m 2G -bios ovmf/OVMF.fd -hda $(IMAGE_NAME).hdd
 
-ovmf-x64:
-	mkdir -p ovmf-x64
-	cd ovmf-x64 && curl -o OVMF-X64.zip https://efi.akeo.ie/OVMF/OVMF-X64.zip && 7z x OVMF-X64.zip
+ovmf:
+	mkdir -p ovmf
+	cd ovmf && curl -Lo OVMF-X64.zip https://efi.akeo.ie/OVMF/OVMF-X64.zip && unzip OVMF-X64.zip
 
 limine:
 	git clone https://github.com/limine-bootloader/limine.git --branch=v4.x-branch-binary --depth=1
@@ -76,5 +76,5 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	rm -rf limine ovmf-x64
+	rm -rf limine ovmf
 	$(MAKE) -C kernel distclean
