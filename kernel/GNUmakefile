@@ -4,7 +4,7 @@ override MAKEFLAGS += -rR
 # Default target.
 .PHONY: all
 all:
-	cargo build --target x86_64-unknown-none
+	cargo +nightly --config build.rustflags=\"-C\ no-redzone=y\ -C\ panic=abort\ -C\ relocation-model=pic\ -C\ code-model=kernel\" build -Z build-std=core,compiler_builtins --target x86_64-unknown-none
 	cp target/x86_64-unknown-none/debug/limine-rust-barebones kernel.elf
 
 # Remove object files and the final executable.
