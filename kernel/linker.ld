@@ -12,7 +12,7 @@ PHDRS
     text    PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ; /* Execute + Read */
     rodata  PT_LOAD    FLAGS((1 << 2)) ;            /* Read only */
     data    PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
-    dynamic PT_DYNAMIC FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
+    dynamic PT_DYNAMIC FLAGS((1 << 1) | (1 << 2)) ; /* Dynamic PHDR for relocations */
 }
 
 SECTIONS
@@ -30,21 +30,6 @@ SECTIONS
     /* Move to the next memory page for .rodata */
     . += CONSTANT(MAXPAGESIZE);
 
-    /* The built-in `x86_64-unknown-none` target generates relocatable executables */
-    /* by default, so we need to include the relocation information (.dynstr, .dynsym, */
-    /* and .rela) for the bootloader too properly load the kernel at runtime. */
-    .dynsym : {
-        *(.dynsym)
-    } :rodata
-
-    .dynstr : {
-        *(.dynstr)
-    } :rodata
-
-    .rela : {
-        *(.rela*)
-    } :rodata
-
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
@@ -52,20 +37,14 @@ SECTIONS
     /* Move to the next memory page for .data */
     . += CONSTANT(MAXPAGESIZE);
 
-    /* The dynamic table is used to find the relocation info (declared above), so it */
-    /* must be included both in the :data and :dynamic segments. */
+    .data : {
+        *(.data .data.*)
+    } :data
+
+    /* Dynamic section for relocations, both in its own PHDR and inside data PHDR */
     .dynamic : {
         *(.dynamic)
     } :data :dynamic
-
-    .got : {
-        *(.got)
-    } :data
-
-    .data : {
-        *(.data.rel.ro .data.rel.ro.*)
-        *(.data .data.*)
-    } :data
 
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
     /* unnecessary zeros will be written to the binary. */
@@ -73,7 +52,6 @@ SECTIONS
     /* above this. */
     .bss : {
         *(COMMON)
-        *(.dynbss)
         *(.bss .bss.*)
     } :data
 
