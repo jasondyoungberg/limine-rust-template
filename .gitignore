@@ -1,4 +1,4 @@
 /limine
-/ovmf-x64
+/ovmf
 *.iso
 *.hdd
