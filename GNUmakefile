@@ -70,22 +70,13 @@ $(IMAGE_NAME).iso: limine kernel
 $(IMAGE_NAME).hdd: limine kernel
 	rm -f $(IMAGE_NAME).hdd
 	dd if=/dev/zero bs=1M count=0 seek=64 of=$(IMAGE_NAME).hdd
-	parted -s $(IMAGE_NAME).hdd mklabel gpt
-	parted -s $(IMAGE_NAME).hdd mkpart ESP fat32 2048s 100%
-	parted -s $(IMAGE_NAME).hdd set 1 esp on
+	sgdisk $(IMAGE_NAME).hdd -n 1:2048 -t 1:ef00
 	./limine/limine bios-install $(IMAGE_NAME).hdd
-	sudo losetup -Pf --show $(IMAGE_NAME).hdd >loopback_dev
-	sudo mkfs.fat -F 32 `cat loopback_dev`p1
-	mkdir -p img_mount
-	sudo mount `cat loopback_dev`p1 img_mount
-	sudo mkdir -p img_mount/EFI/BOOT
-	sudo cp -v kernel/kernel.elf limine.cfg limine/limine-bios.sys img_mount/
-	sudo cp -v limine/BOOTX64.EFI img_mount/EFI/BOOT/
-	sudo cp -v limine/BOOTIA32.EFI img_mount/EFI/BOOT/
-	sync
-	sudo umount img_mount
-	sudo losetup -d `cat loopback_dev`
-	rm -rf loopback_dev img_mount
+	mformat -i $(IMAGE_NAME).hdd@@1M
+	mmd -i $(IMAGE_NAME).hdd@@1M ::/EFI ::/EFI/BOOT
+	mcopy -i $(IMAGE_NAME).hdd@@1M kernel/kernel.elf limine.cfg limine/limine-bios.sys ::/
+	mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTX64.EFI ::/EFI/BOOT
+	mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTIA32.EFI ::/EFI/BOOT
 
 .PHONY: clean
 clean:
