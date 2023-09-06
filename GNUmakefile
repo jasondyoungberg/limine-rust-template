@@ -45,7 +45,7 @@ ovmf:
 
 limine:
 	git clone https://github.com/limine-bootloader/limine.git --branch=v5.x-branch-binary --depth=1
-	$(MAKE) -C limine CC="$(HOST_CC)"
+	unset CC; unset CFLAGS; unset CPPFLAGS; unset LDFLAGS; unset LIBS; $(MAKE) -C limine CC="$(HOST_CC)"
 
 .PHONY: kernel
 kernel:
