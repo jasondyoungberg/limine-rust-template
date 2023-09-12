@@ -1,10 +1,12 @@
 # Limine Rust Bare Bones
 
-This repository will demonstrate how to set up a basic higher half x86-64 kernel in Rust using Limine.
+This repository will demonstrate how to set up a basic x86-64 kernel in Rust using Limine.
 
 ## How to use this?
 
 ### Dependencies
+
+Any `make` command depends on GNU make (`gmake`) and is expected to be run using it. This usually means using `make` on most GNU/Linux distros, or `gmake` on other non-GNU systems.
 
 All `make all*` targets depend on Rust.
 
