@@ -1,2 +1,2 @@
-*.elf
+/kernel
 /target

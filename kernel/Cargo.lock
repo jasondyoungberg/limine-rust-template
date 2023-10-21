@@ -9,7 +9,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f45c67c512034e8eb0064556e1db5da671b3ef50791cd6ac6376e7aefc0ef27e"
 
 [[package]]
-name = "limine-rust-barebones"
+name = "limine-rust-template"
 version = "0.1.0"
 dependencies = [
  "limine",

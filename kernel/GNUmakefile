@@ -14,13 +14,13 @@ endif
 .PHONY: all
 all:
 	cargo build --target x86_64-unknown-none --profile $(RUST_PROFILE)
-	cp target/x86_64-unknown-none/$(RUST_PROFILE_SUBDIR)/limine-rust-barebones kernel.elf
+	cp target/x86_64-unknown-none/$(RUST_PROFILE_SUBDIR)/limine-rust-template kernel
 
 # Remove object files and the final executable.
 .PHONY: clean
 clean:
 	cargo clean
-	rm -rf kernel.elf
+	rm -rf kernel
 
 .PHONY: distclean
 distclean: clean

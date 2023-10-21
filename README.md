@@ -1,4 +1,4 @@
-# Limine Rust Bare Bones
+# Limine Rust Template
 
 This repository will demonstrate how to set up a basic x86-64 kernel in Rust using Limine.
 
