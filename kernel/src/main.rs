@@ -4,9 +4,14 @@
 use core::arch::asm;
 
 static FRAMEBUFFER_REQUEST: limine::FramebufferRequest = limine::FramebufferRequest::new(0);
+/// Sets the base revision to 1, this is recommended as this is the latest base revision described
+/// by the Limine boot protocol specification. See specification for further info.
+static BASE_REVISION: limine::BaseRevision = limine::BaseRevision::new(1);
 
 #[no_mangle]
 unsafe extern "C" fn _start() -> ! {
+    assert!(BASE_REVISION.is_supported());
+
     // Ensure we got a framebuffer.
     if let Some(framebuffer_response) = FRAMEBUFFER_REQUEST.get_response().get() {
         if framebuffer_response.framebuffer_count < 1 {
@@ -25,7 +30,11 @@ unsafe extern "C" fn _start() -> ! {
             // We can safely unwrap the result of `as_ptr()` because the framebuffer address is
             // guaranteed to be provided by the bootloader.
             unsafe {
-                *(framebuffer.address.as_ptr().unwrap().offset(pixel_offset as isize) as *mut u32) = 0xFFFFFFFF;
+                *(framebuffer
+                    .address
+                    .as_ptr()
+                    .unwrap()
+                    .offset(pixel_offset as isize) as *mut u32) = 0xFFFFFFFF;
             }
         }
     }
