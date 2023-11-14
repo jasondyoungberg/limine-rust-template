@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-limine = "0.1.11"
+limine = "0.1.12"
