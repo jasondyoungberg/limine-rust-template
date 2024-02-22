@@ -3,34 +3,28 @@
 
 use core::arch::asm;
 
-static FRAMEBUFFER_REQUEST: limine::FramebufferRequest = limine::FramebufferRequest::new(0);
-/// Sets the base revision to 1, this is recommended as this is the latest base revision described
-/// by the Limine boot protocol specification. See specification for further info.
-static BASE_REVISION: limine::BaseRevision = limine::BaseRevision::new(1);
+use limine::request::FramebufferRequest;
+use limine::BaseRevision;
+
+/// Sets the base revision to the latest revision supported by the crate.
+/// See specification for further info.
+static BASE_REVISION: BaseRevision = BaseRevision::new();
+
+static FRAMEBUFFER_REQUEST: FramebufferRequest = FramebufferRequest::new();
 
 #[no_mangle]
 unsafe extern "C" fn _start() -> ! {
     assert!(BASE_REVISION.is_supported());
 
-    // Ensure we got a framebuffer.
-    if let Some(framebuffer_response) = FRAMEBUFFER_REQUEST.get_response().get() {
-        if framebuffer_response.framebuffer_count < 1 {
-            hcf();
-        }
+    if let Some(framebuffer_response) = FRAMEBUFFER_REQUEST.get_response() {
+        if let Some(framebuffer) = framebuffer_response.framebuffers().next() {
+            for i in 0..100_u64 {
+                // Calculate the pixel offset using the framebuffer information we obtained above.
+                // We skip `i` scanlines (pitch is provided in bytes) and add `i * 4` to skip `i` pixels forward.
+                let pixel_offset = i * framebuffer.pitch() + i * 4;
 
-        // Get the first framebuffer's information.
-        let framebuffer = &framebuffer_response.framebuffers()[0];
-
-        for i in 0..100_usize {
-            // Calculate the pixel offset using the framebuffer information we obtained above.
-            // We skip `i` scanlines (pitch is provided in bytes) and add `i * 4` to skip `i` pixels forward.
-            let pixel_offset = i * framebuffer.pitch as usize + i * 4;
-
-            // Write 0xFFFFFFFF to the provided pixel offset to fill it white.
-            // We can safely unwrap the result of `as_ptr()` because the framebuffer address is
-            // guaranteed to be provided by the bootloader.
-            unsafe {
-                *(framebuffer.address.as_ptr().unwrap().add(pixel_offset) as *mut u32) = 0xFFFFFFFF;
+                // Write 0xFFFFFFFF to the provided pixel offset to fill it white.
+                *(framebuffer.addr().add(pixel_offset as usize) as *mut u32) = 0xFFFFFFFF;
             }
         }
     }
