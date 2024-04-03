@@ -8,8 +8,11 @@ use limine::BaseRevision;
 
 /// Sets the base revision to the latest revision supported by the crate.
 /// See specification for further info.
+// Be sure to mark all limine requests with #[used], otherwise they may not end up in the final binary.
+#[used]
 static BASE_REVISION: BaseRevision = BaseRevision::new();
 
+#[used]
 static FRAMEBUFFER_REQUEST: FramebufferRequest = FramebufferRequest::new();
 
 #[no_mangle]
