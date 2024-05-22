@@ -9,33 +9,45 @@ ENTRY(_start)
 /* MMU permissions */
 PHDRS
 {
-    text    PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ; /* Execute + Read */
-    rodata  PT_LOAD    FLAGS((1 << 2)) ;            /* Read only */
-    data    PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
-    dynamic PT_DYNAMIC FLAGS((1 << 1) | (1 << 2)) ; /* Dynamic PHDR for relocations */
+    requests PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
+    text     PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ; /* Execute + Read */
+    rodata   PT_LOAD    FLAGS((1 << 2)) ;            /* Read only */
+    data     PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
+    dynamic  PT_DYNAMIC FLAGS((1 << 1) | (1 << 2)) ; /* Dynamic PHDR for relocations */
 }
 
 SECTIONS
 {
-    /* We wanna be placed in the topmost 2GiB of the address space, for optimisations */
-    /* and because that is what the Limine spec mandates. */
-    /* Any address in this region will do, but often 0xffffffff80000000 is chosen as */
-    /* that is the beginning of the region. */
-    . = 0xffffffff80000000;
+    /* The bootloader will relocate relocatable kernels with a base address of 0 */
+    /* to or above the address 0xffffffff80000000, which marks the beginning of */
+    /* the top-most 2GiB region of virtual address space. */
+    /* Marking the base address as 0 also makes the GNU linker (ld.bfd) emit an ELF */
+    /* file of type ET_DYN, which is what we want. */
+    . = 0;
+
+    /* Define a section to contain the Limine requests and assign it to its own PHDR */
+    .requests : {
+        KEEP(*(.requests_start_marker))
+        KEEP(*(.requests))
+        KEEP(*(.requests_end_marker))
+    } :requests
+
+    /* Move to the next memory page for .text */
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .text : {
         *(.text .text.*)
     } :text
 
     /* Move to the next memory page for .rodata */
-    . += CONSTANT(MAXPAGESIZE);
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
 
     /* Move to the next memory page for .data */
-    . += CONSTANT(MAXPAGESIZE);
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .data : {
         *(.data .data.*)
