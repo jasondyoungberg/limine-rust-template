@@ -9,7 +9,6 @@ ENTRY(_start)
 /* MMU permissions */
 PHDRS
 {
-    requests PT_LOAD    FLAGS(0x06); /* Write + Read */
     text     PT_LOAD    FLAGS(0x05); /* Execute + Read */
     rodata   PT_LOAD    FLAGS(0x04); /* Read only */
     data     PT_LOAD    FLAGS(0x06); /* Write + Read */
@@ -23,16 +22,6 @@ SECTIONS
     /* Any address in this region will do, but often 0xffffffff80000000 is chosen as */
     /* that is the beginning of the region. */
     . = 0xffffffff80000000;
-
-    /* Define a section to contain the Limine requests and assign it to its own PHDR */
-    .requests : {
-        KEEP(*(.requests_start_marker))
-        KEEP(*(.requests))
-        KEEP(*(.requests_end_marker))
-    } :requests
-
-    /* Move to the next memory page for .text */
-    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .text : {
         *(.text .text.*)
@@ -50,6 +39,12 @@ SECTIONS
 
     .data : {
         *(.data .data.*)
+
+        /* Place the sections that contain the Limine requests as part of the .data */
+        /* output section. */
+        KEEP(*(.requests_start_marker))
+        KEEP(*(.requests))
+        KEEP(*(.requests_end_marker))
     } :data
 
     /* Global offset table section, explicitly created because it may cause issues */
@@ -73,8 +68,12 @@ SECTIONS
     } :data
 
     /* Discard .note.* and .eh_frame since they may cause issues on some hosts. */
+    /* Also discard the program interpreter section since we do not need one. This is */
+    /* more or less equivalent to the --no-dynamic-linker linker flag, except that it */
+    /* works with ld.gold. */
     /DISCARD/ : {
         *(.eh_frame)
         *(.note .note.*)
+        *(.interp)
     }
 }
