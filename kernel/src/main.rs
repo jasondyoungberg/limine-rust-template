@@ -10,9 +10,12 @@ use limine::BaseRevision;
 /// See specification for further info.
 // Be sure to mark all limine requests with #[used], otherwise they may be removed by the compiler.
 #[used]
+// The .requests section allows limine to find the requests faster and more safely.
+#[link_section = ".requests"]
 static BASE_REVISION: BaseRevision = BaseRevision::new();
 
 #[used]
+#[link_section = ".requests"]
 static FRAMEBUFFER_REQUEST: FramebufferRequest = FramebufferRequest::new();
 
 #[no_mangle]
