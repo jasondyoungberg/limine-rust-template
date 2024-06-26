@@ -3,16 +3,6 @@ override MAKEFLAGS += -rR
 
 override IMAGE_NAME := template
 
-# Convenience macro to reliably declare user overridable variables.
-define DEFAULT_VAR =
-    ifeq ($(origin $1),default)
-        override $(1) := $(2)
-    endif
-    ifeq ($(origin $1),undefined)
-        override $(1) := $(2)
-    endif
-endef
-
 .PHONY: all
 all: $(IMAGE_NAME).iso
 
