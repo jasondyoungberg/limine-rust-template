@@ -15,12 +15,12 @@ SECTIONS
     /* base load address. */
     . = 0xffffffff80000000 + SIZEOF_HEADERS;
 
-    .text ALIGN(CONSTANT(MAXPAGESIZE)) : {
-        *(.text .text.*)
-    }
-
     .rodata ALIGN(CONSTANT(MAXPAGESIZE)) : {
         *(.rodata .rodata.*)
+    }
+
+    .text ALIGN(CONSTANT(MAXPAGESIZE)) : {
+        *(.text .text.*)
     }
 
     .data ALIGN(CONSTANT(MAXPAGESIZE)) : {
@@ -42,7 +42,7 @@ SECTIONS
     /* unnecessary zeros will be written to the binary. */
     /* If you need, for example, .init_array and .fini_array, those should be placed */
     /* above this. */
-    .bss : {
+    .bss ALIGN(CONSTANT(MAXPAGESIZE)) : {
         *(.bss .bss.*)
         *(COMMON)
     }
