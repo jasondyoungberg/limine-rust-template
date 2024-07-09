@@ -5,6 +5,18 @@ OUTPUT_ARCH(i386:x86-64)
 /* We want the symbol _start to be our entry point */
 ENTRY(_start)
 
+/* Define the program headers we want so the bootloader gives us the right */
+/* MMU permissions; this also allows us to exert more control over the linking */
+/* process. */
+PHDRS
+{
+    headers PT_PHDR PHDRS;
+    text    PT_LOAD FILEHDR PHDRS;
+    rodata  PT_LOAD;
+    data    PT_LOAD;
+    dynamic PT_DYNAMIC;
+}
+
 SECTIONS
 {
     /* We want to be placed in the topmost 2GiB of the address space, for optimisations */
@@ -15,15 +27,21 @@ SECTIONS
     /* base load address. */
     . = 0xffffffff80000000 + SIZEOF_HEADERS;
 
-    .rodata ALIGN(CONSTANT(MAXPAGESIZE)) : {
-        *(.rodata .rodata.*)
-    }
-
-    .text ALIGN(CONSTANT(MAXPAGESIZE)) : {
+    .text : {
         *(.text .text.*)
-    }
+    } :text
 
-    .data ALIGN(CONSTANT(MAXPAGESIZE)) : {
+    /* Move to the next memory page for .rodata */
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
+
+    .rodata : {
+        *(.rodata .rodata.*)
+    } :rodata
+
+    /* Move to the next memory page for .data */
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
+
+    .data : {
         *(.data .data.*)
 
         /* Place the sections that contain the Limine requests as part of the .data */
@@ -31,26 +49,29 @@ SECTIONS
         KEEP(*(.requests_start_marker))
         KEEP(*(.requests))
         KEEP(*(.requests_end_marker))
-    }
+    } :data
 
-    /* Dynamic section for relocations and other PIE related information. */
+    /* Dynamic section for relocations, both in its own PHDR and inside data PHDR. */
     .dynamic : {
         *(.dynamic)
-    }
+    } :data :dynamic
 
-    /* NOTE: .bss needs to be the last thing mapped to the data PHDR, otherwise lots of */
+    /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
     /* unnecessary zeros will be written to the binary. */
     /* If you need, for example, .init_array and .fini_array, those should be placed */
     /* above this. */
-    .bss ALIGN(CONSTANT(MAXPAGESIZE)) : {
+    .bss : {
         *(.bss .bss.*)
         *(COMMON)
-    }
+    } :data
 
-    /* Discard the program interpreter section since we do not need one. This is */
+    /* Discard .note.* and .eh_frame* since they may cause issues on some hosts. */
+    /* Also discard the program interpreter section since we do not need one. This is */
     /* more or less equivalent to the --no-dynamic-linker linker flag, except that it */
     /* works with ld.gold. */
     /DISCARD/ : {
+        *(.eh_frame*)
+        *(.note .note.*)
         *(.interp)
     }
 }
