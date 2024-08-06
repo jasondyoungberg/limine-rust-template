@@ -9,11 +9,9 @@ ENTRY(_start)
 /* process. */
 PHDRS
 {
-    headers PT_PHDR PHDRS;
-    text    PT_LOAD FILEHDR PHDRS;
+    text    PT_LOAD;
     rodata  PT_LOAD;
     data    PT_LOAD;
-    dynamic PT_DYNAMIC;
 }
 
 SECTIONS
@@ -22,9 +20,7 @@ SECTIONS
     /* and because that is what the Limine spec mandates. */
     /* Any address in this region will do, but often 0xffffffff80000000 is chosen as */
     /* that is the beginning of the region. */
-    /* Additionally, leave space for the ELF headers by adding SIZEOF_HEADERS to the */
-    /* base load address. */
-    . = 0xffffffff80000000 + SIZEOF_HEADERS;
+    . = 0xffffffff80000000;
 
     .text : {
         *(.text .text.*)
@@ -50,11 +46,6 @@ SECTIONS
         KEEP(*(.requests_end_marker))
     } :data
 
-    /* Dynamic section for relocations, both in its own PHDR and inside data PHDR. */
-    .dynamic : {
-        *(.dynamic)
-    } :data :dynamic
-
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
     /* unnecessary zeros will be written to the binary. */
     /* If you need, for example, .init_array and .fini_array, those should be placed */
@@ -65,12 +56,8 @@ SECTIONS
     } :data
 
     /* Discard .note.* and .eh_frame* since they may cause issues on some hosts. */
-    /* Also discard the program interpreter section since we do not need one. This is */
-    /* more or less equivalent to the --no-dynamic-linker linker flag, except that it */
-    /* works with ld.gold. */
     /DISCARD/ : {
         *(.eh_frame*)
         *(.note .note.*)
-        *(.interp)
     }
 }
