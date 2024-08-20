@@ -1,6 +1,20 @@
 # Nuke built-in rules and variables.
 override MAKEFLAGS += -rR
 
+# Convenience macro to reliably declare user overridable variables.
+define DEFAULT_VAR =
+    ifeq ($(origin $1),default)
+        override $(1) := $(2)
+    endif
+    ifeq ($(origin $1),undefined)
+        override $(1) := $(2)
+    endif
+endef
+
+# Default user QEMU flags. These are appended to the QEMU command calls.
+override DEFAULT_QEMUFLAGS := -m 2G
+$(eval $(call DEFAULT_VAR,QEMUFLAGS,$(DEFAULT_QEMUFLAGS)))
+
 override IMAGE_NAME := template
 
 .PHONY: all
@@ -11,22 +25,45 @@ all-hdd: $(IMAGE_NAME).hdd
 
 .PHONY: run
 run: $(IMAGE_NAME).iso
-	qemu-system-x86_64 -M q35 -m 2G -cdrom $(IMAGE_NAME).iso -boot d
+	qemu-system-x86_64 \
+		-M q35 \
+		-cdrom $(IMAGE_NAME).iso \
+		-boot d \
+		$(QEMUFLAGS)
 
 .PHONY: run-uefi
-run-uefi: ovmf-code-x86_64.fd $(IMAGE_NAME).iso
-	qemu-system-x86_64 -M q35 -m 2G -bios ovmf-code-x86_64.fd -cdrom $(IMAGE_NAME).iso -boot d
+run-uefi: ovmf/ovmf-code-x86_64.fd ovmf/ovmf-vars-x86_64.fd $(IMAGE_NAME).iso
+	qemu-system-x86_64 \
+		-M q35 \
+		-drive if=pflash,unit=0,format=raw,file=ovmf/ovmf-code-x86_64.fd,readonly=on \
+		-drive if=pflash,unit=1,format=raw,file=ovmf/ovmf-vars-x86_64.fd \
+		-cdrom $(IMAGE_NAME).iso \
+		-boot d \
+		$(QEMUFLAGS)
 
 .PHONY: run-hdd
 run-hdd: $(IMAGE_NAME).hdd
-	qemu-system-x86_64 -M q35 -m 2G -hda $(IMAGE_NAME).hdd
+	qemu-system-x86_64 \
+		-M q35 \
+		-hda $(IMAGE_NAME).hdd \
+		$(QEMUFLAGS)
 
 .PHONY: run-hdd-uefi
-run-hdd-uefi: ovmf-code-x86_64.fd $(IMAGE_NAME).hdd
-	qemu-system-x86_64 -M q35 -m 2G -bios ovmf-code-x86_64.fd -hda $(IMAGE_NAME).hdd
+run-hdd-uefi: ovmf/ovmf-code-x86_64.fd ovmf/ovmf-vars-x86_64.fd $(IMAGE_NAME).hdd
+	qemu-system-x86_64 \
+		-M q35 \
+		-drive if=pflash,unit=0,format=raw,file=ovmf/ovmf-code-$(KARCH).fd,readonly=on \
+		-drive if=pflash,unit=1,format=raw,file=ovmf/ovmf-vars-$(KARCH).fd \
+		-hda $(IMAGE_NAME).hdd \
+		$(QEMUFLAGS)
 
-ovmf-code-x86_64.fd:
+ovmf/ovmf-code-x86_64.fd:
+	mkdir -p ovmf
 	curl -Lo $@ https://github.com/limine-bootloader/edk2-ovmf-nightly/releases/latest/download/ovmf-code-x86_64.fd
+
+ovmf/ovmf-vars-x86_64.fd:
+	mkdir -p ovmf
+	curl -Lo $@ https://github.com/limine-bootloader/edk2-ovmf-nightly/releases/latest/download/ovmf-vars-x86_64.fd
 
 limine/limine:
 	rm -rf limine
@@ -74,4 +111,4 @@ clean:
 .PHONY: distclean
 distclean: clean
 	$(MAKE) -C kernel distclean
-	rm -rf limine ovmf*
+	rm -rf limine ovmf
