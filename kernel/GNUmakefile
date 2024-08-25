@@ -1,5 +1,6 @@
 # Nuke built-in rules and variables.
-override MAKEFLAGS += -rR
+MAKEFLAGS += -rR
+.SUFFIXES:
 
 ifeq ($(RUST_TARGET),)
     override RUST_TARGET := x86_64-unknown-none
