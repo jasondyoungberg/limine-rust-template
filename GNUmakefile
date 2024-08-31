@@ -3,18 +3,10 @@ MAKEFLAGS += -rR
 .SUFFIXES:
 
 # Convenience macro to reliably declare user overridable variables.
-define DEFAULT_VAR =
-    ifeq ($(origin $1),default)
-        override $(1) := $(2)
-    endif
-    ifeq ($(origin $1),undefined)
-        override $(1) := $(2)
-    endif
-endef
+override USER_VARIABLE = $(if $(filter $(origin $(1)),default undefined),$(eval override $(1) := $(2)))
 
 # Default user QEMU flags. These are appended to the QEMU command calls.
-override DEFAULT_QEMUFLAGS := -m 2G
-$(eval $(call DEFAULT_VAR,QEMUFLAGS,$(DEFAULT_QEMUFLAGS)))
+$(call USER_VARIABLE,QEMUFLAGS,-m 2G)
 
 override IMAGE_NAME := template
 
