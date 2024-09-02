@@ -52,11 +52,11 @@ run-hdd-uefi: ovmf/ovmf-code-x86_64.fd ovmf/ovmf-vars-x86_64.fd $(IMAGE_NAME).hd
 
 ovmf/ovmf-code-x86_64.fd:
 	mkdir -p ovmf
-	curl -Lo $@ https://github.com/limine-bootloader/edk2-ovmf-nightly/releases/latest/download/ovmf-code-x86_64.fd
+	curl -Lo $@ https://github.com/osdev0/edk2-ovmf-nightly/releases/latest/download/ovmf-code-x86_64.fd
 
 ovmf/ovmf-vars-x86_64.fd:
 	mkdir -p ovmf
-	curl -Lo $@ https://github.com/limine-bootloader/edk2-ovmf-nightly/releases/latest/download/ovmf-vars-x86_64.fd
+	curl -Lo $@ https://github.com/osdev0/edk2-ovmf-nightly/releases/latest/download/ovmf-vars-x86_64.fd
 
 limine/limine:
 	rm -rf limine
