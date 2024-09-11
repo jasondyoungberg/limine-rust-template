@@ -1,6 +1,6 @@
 # Limine Rust Template
 
-This repository will demonstrate how to set up a basic x86-64 kernel in Rust using Limine.
+This repository will demonstrate how to set up a basic kernel in Rust using Limine.
 
 ## How to use this?
 
@@ -11,6 +11,14 @@ Any `make` command depends on GNU make (`gmake`) and is expected to be run using
 All `make all*` targets depend on Rust.
 
 Additionally, building an ISO with `make all` requires `xorriso`, and building a HDD/USB image with `make all-hdd` requires `sgdisk` (usually from `gdisk` or `gptfdisk` packages) and `mtools`.
+
+### Architectural targets
+
+The `KARCH` make variable determines the target architecture to build the kernel and image for.
+
+The default `KARCH` is `x86_64`. Other options include: `aarch64`, and `riscv64`.
+
+Other architectures will need to be enabled in kernel/rust-toolchain.toml
 
 ### Makefile targets
 
